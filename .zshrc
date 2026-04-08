@@ -1,49 +1,66 @@
-#
-# .zshrc is sourced in interactive shells.
-# It should contain commands to set up aliases,
-# functions, options, key bindings, etc.
-#
-
-autoload -U compinit
+# Lines configured by zsh-newuser-install
+HISTFILE=~/.histfile
+HISTSIZE=1000
+SAVEHIST=1000
+setopt beep
+zstyle :compinstall filename '/home/neeoko/.zshrc'
+autoload -Uz compinit
 compinit
+bindkey -e .
 
-#allow tab completion in the middle of a word
-setopt COMPLETE_IN_WORD
 
-## keep background processes at full speed
-#setopt NOBGNICE
-## restart running processes on exit
-#setopt HUP
-
-## history
-#setopt APPEND_HISTORY
-## for sharing history between zsh processes
-#setopt INC_APPEND_HISTORY
-#setopt SHARE_HISTORY
-
-## never ever beep ever
-#setopt NO_BEEP
-
-## automatically decide when to page a list of completions
-#LISTMAX=0
-
-## disable mail checking
-#MAILCHECK=0
-
-# autoload -U colors
-#colors
-eval "$(oh-my-posh init zsh --config /home/neeoko/.cache/oh-my-posh/themes/di4am0nd.omp.json)"
-bindkey "^[[3~" delete-char
-bindkey "^[[1;5C" forward-word
-bindkey "^[[1;5D" backward-word
-bindkey '^H' backward-kill-word
-bindkey '^[[3;5~' kill-word
-bindkey "^[[H" beginning-of-line
-bindkey "^[[F" end-of-line
-
-# Added by LM Studio CLI (lms)
-export PATH="$PATH:/home/neeoko/.lmstudio/bin"
-# End of LM Studio CLI section
-if [ -x "$(command -v tmux)" ] && [ -n "${DISPLAY}" ] && [ -z "${TMUX}" ]; then
-    exec tmux new-session -A -s ${USER} >/dev/null 2>&1
+if [ -f ~/.zsh_aliases ]; then
+    . ~/.zsh_aliases
 fi
+
+# Hyper-V GPU-PV Config
+export LD_LIBRARY_PATH=/usr/lib/wsl/lib:$LD_LIBRARY_PATH
+export PATH=$PATH:/usr/lib/wsl/lib
+# export GALLIUM_DRIVER=d3d12
+# export MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA
+export LIBGL_ALWAYS_SOFTWARE=0
+
+setopt autocd extendedglob
+
+# These escape codes are standard for xterm/modern terminals
+bindkey '^[[1;5D' backward-word       # Ctrl+Left
+bindkey '^[[1;5C' forward-word        # Ctrl+Right
+bindkey '^H'      backward-kill-word  # Ctrl+Backspace
+bindkey '^[[3;5~' kill-word           # Ctrl+Delete
+
+# 3. Fallbacks (for MacOS/iTerm2 or different term types)
+# If the above don't work, these are common alternatives
+bindkey '^[[5D' backward-word
+bindkey '^[[5C' forward-word
+bindkey '^W'    backward-kill-word    # Often standard Ctrl+W
+
+# 4. Bonus: Shift+Tab to reverse cycle through autocomplete
+bindkey '^[[Z' reverse-menu-complete
+
+# 5. Bonus: Home/End keys
+bindkey '^[[H' beginning-of-line      # Home
+bindkey '^[[F' end-of-line            # End
+
+export TERM="xterm-256color"
+
+source ~/.zsh/fsh/fast-syntax-highlighting.plugin.zsh
+source ~/.zsh/zsh-z/zsh-z.plugin.zsh
+source ~/.zsh/zsh-autosuggestions/zsh-autosuggestions.plugin.zsh
+
+eval "$(starship init zsh)"
+
+if command -v tmux &> /dev/null && [ -z "$TMUX" ]; then
+    # Attempt to attach to an existing session, or create a new one
+    tmux attach || tmux new
+fi
+
+if [ -z "$SSH_AUTH_SOCK" ]; then
+   export SSH_AUTH_SOCK=$HOME/.ssh/agent.sock
+
+   if [ ! -S "$SSH_AUTH_SOCK" ]; then
+       eval $(ssh-agent -a $SSH_AUTH_SOCK) > /dev/null
+   fi
+fi
+
+cd /home/neeoko/Work
+
